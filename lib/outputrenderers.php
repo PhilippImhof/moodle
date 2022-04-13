@@ -2933,8 +2933,11 @@ EOD;
 
             // Output not yet started.
             $protocol = (isset($_SERVER['SERVER_PROTOCOL']) ? $_SERVER['SERVER_PROTOCOL'] : 'HTTP/1.0');
-            if (empty($_SERVER['HTTP_RANGE'])) {
+            if ($_SERVER['HTTP_ACCEPT'] == 'application/json') {
                 @header($protocol . ' 404 Not Found');
+            }
+            else if (empty($_SERVER['HTTP_RANGE'])) {
+                @header($protocol . ' 307 Temporary Redirect');
             } else if (core_useragent::check_safari_ios_version(602) && !empty($_SERVER['HTTP_X_PLAYBACK_SESSION_ID'])) {
                 // Coax iOS 10 into sending the session cookie.
                 @header($protocol . ' 403 Forbidden');
