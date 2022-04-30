@@ -2904,9 +2904,10 @@ EOD;
      * @param string $link Link for the Continue button
      * @param array $backtrace The execution backtrace
      * @param string $debuginfo Debugging information
+     * @param string $http_response HTTP status code according to RFC 2616
      * @return string the HTML to output.
      */
-    public function fatal_error($message, $moreinfourl, $link, $backtrace, $debuginfo = null, $errorcode = "") {
+    public function fatal_error($message, $moreinfourl, $link, $backtrace, $debuginfo = null, $errorcode = "", $http_response = "") {
         global $CFG;
 
         $output = '';
@@ -2934,7 +2935,13 @@ EOD;
             // Output not yet started.
             $protocol = (isset($_SERVER['SERVER_PROTOCOL']) ? $_SERVER['SERVER_PROTOCOL'] : 'HTTP/1.0');
             if (empty($_SERVER['HTTP_RANGE'])) {
-                @header($protocol . ' 404 Not Found');
+                // Maintain compatibility by sending a 404 error if no specific status code was given
+                if (empty($http_response)) {
+                    @header($protocol . ' 404 Not Found');
+                }
+                else {
+                    @header($protocol . $http_response);
+                }
             } else if (core_useragent::check_safari_ios_version(602) && !empty($_SERVER['HTTP_X_PLAYBACK_SESSION_ID'])) {
                 // Coax iOS 10 into sending the session cookie.
                 @header($protocol . ' 403 Forbidden');
@@ -5211,9 +5218,10 @@ class core_renderer_cli extends core_renderer {
      * @param string $link Link for the Continue button
      * @param array $backtrace The execution backtrace
      * @param string $debuginfo Debugging information
+     * @param string $http_response HTTP status code according to RFC 2616
      * @return string A template fragment for a fatal error
      */
-    public function fatal_error($message, $moreinfourl, $link, $backtrace, $debuginfo = null, $errorcode = "") {
+    public function fatal_error($message, $moreinfourl, $link, $backtrace, $debuginfo = null, $errorcode = "", $http_response = "") {
         global $CFG;
 
         $output = "!!! $message !!!\n";
@@ -5287,9 +5295,10 @@ class core_renderer_ajax extends core_renderer {
      * @param string $link Link for the Continue button
      * @param array $backtrace The execution backtrace
      * @param string $debuginfo Debugging information
+     * @param string $http_response HTTP status code according to RFC 2616
      * @return string A template fragment for a fatal error
      */
-    public function fatal_error($message, $moreinfourl, $link, $backtrace, $debuginfo = null, $errorcode = "") {
+    public function fatal_error($message, $moreinfourl, $link, $backtrace, $debuginfo = null, $errorcode = "", $http_response = "") {
         global $CFG;
 
         $this->page->set_context(null); // ugly hack - make sure page context is set to something, we do not want bogus warnings here

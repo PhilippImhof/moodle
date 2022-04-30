@@ -373,6 +373,51 @@ function default_exception_handler($ex) {
             $logerrmsg = "Default exception handler: ".$info->message.' Debug: '.$info->debuginfo."\n".format_backtrace($info->backtrace, true);
             error_log($logerrmsg);
         }
+        // Set HTTP Status Code (RFC 2616) according to the type of extension we have to handle
+        if ($ex instanceof require_login_exception) {
+            $http_response = '401 Unauthorized';
+        }
+        elseif (($ex instanceof required_capability_exception)  || ($ex instanceof invalid_dataroot_permissions)) {
+            // The server understood the request, but is refusing to fulfill it.
+            // Authorization will not help and the request SHOULD NOT be repeated.
+            $http_response = '403 Forbidden';
+        }
+        elseif ($ex instanceof coding_exception) {
+            // This exception indicates a programming error that must be fixed by a programer.
+            // 4xx status codes are "intended for cases in which the client seems to have erred"
+            $http_response = '500 Internal Server Error';
+        }
+        elseif (($ex instanceof invalid_parameter_exception) || ($ex instanceof invalid_response_exception) || ($ex instanceof invalid_state_exception)) {
+            $http_response = '400 Bad Request';
+        }
+        elseif ($ex instanceof webservice_parameter_exception) {
+            $http_response = '400 Bad Request';
+        }
+        elseif ($ex instanceof file_serving_exception) {
+            // At the time of writing, the only use of file_serving_exception in core happens
+            // in the H5P component and the debug info insinuates a permission problem.
+            // In other cases, the file might be missing. Basically, we are just guessing here.
+            if (str_contains($info->debuginfo, 'permission')) {
+                $http_response = '403 Forbidden';
+            }
+            else {
+                $http_response = '404 Not Found';
+            }
+            
+        }
+        // generic Moodle exception
+        elseif ($ex instanceof moodle_exception) {
+            // In earlier versions, the error was (almost) always 404, so we keep this for maximum compatibility
+            $http_response = '404 Not Found';
+        }
+        // any other exception, just in case
+        elseif ($ex instanceof Exception) {
+            $http_response = '500 Internal Server Error';
+        }
+        else {
+            // catch-all code for compatibility again
+            $http_response = '404 Not Found';
+        }
 
         try {
             if ($DB) {
@@ -387,7 +432,7 @@ function default_exception_handler($ex) {
                 $renderer = $OUTPUT;
             }
             echo $renderer->fatal_error($info->message, $info->moreinfourl, $info->link, $info->backtrace, $info->debuginfo,
-                $info->errorcode);
+                                        $info->errorcode, $http_response);
         } catch (Exception $e) {
             $out_ex = $e;
         } catch (Throwable $e) {
