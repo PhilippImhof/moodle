@@ -37,6 +37,36 @@ require_once($CFG->dirroot . '/question/type/calculated/questiontype.php');
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class qtype_calculatedmulti extends qtype_calculated {
+  public function get_question_options($question) {
+      global $DB, $OUTPUT;
+
+      $question->specific_options = $DB->get_record('question_calculatedmulti_options', ['question' => $question->id]);
+
+      if ($question->specific_options === false) {
+          debugging("Question ID {$question->id} was missing its specific options record. Using default.", DEBUG_DEVELOPER);
+
+          $question->specific_options = $this->create_default_specific_options($question);
+      }
+
+      parent::get_question_options($question);
+  }
+
+  /**
+   * Create a default specific_options object for the provided question. FIXME
+   *
+   * @param object $question The queston we are working with.
+   * @return object The options object.
+   */
+  protected function create_default_specific_options($question) {
+      // Create a default question options record.
+      $specific_options = new stdClass();
+      $specific_options->question = $question->id;
+
+      // By default, disallow HTML in answers
+      $specific_options->allowhtml = 0;
+
+      return $specific_options;
+  }
 
     public function save_question_options($question) {
         global $CFG, $DB;
@@ -49,6 +79,8 @@ class qtype_calculatedmulti extends qtype_calculated {
         $update = true;
         $options = $DB->get_record('question_calculated_options',
                 array('question' => $question->id));
+        $specific_options = $DB->get_record('question_calculatedmulti_options',
+                                            array('question' => $question->id));
         if (!$options) {
             $options = new stdClass();
             $options->question = $question->id;
@@ -57,12 +89,19 @@ class qtype_calculatedmulti extends qtype_calculated {
             $options->incorrectfeedback = '';
             $options->id = $DB->insert_record('question_calculated_options', $options);
         }
+        if (!$specific_options) {
+            $specific_options = new stdClass();
+            $specific_options->question = $question->id;
+            $specific_options->id = $DB->insert_record('question_calculatedmulti_options', $specific_options);
+        }
         $options->synchronize = $question->synchronize;
         $options->single = $question->single;
         $options->answernumbering = $question->answernumbering;
         $options->shuffleanswers = $question->shuffleanswers;
+        $specific_options->allowhtml = $question->allowhtml;
         $options = $this->save_combined_feedback_helper($options, $question, $context, true);
         $DB->update_record('question_calculated_options', $options);
+        $DB->update_record('question_calculatedmulti_options', $specific_options);
 
         // Get old versions of the objects.
         if (!$oldanswers = $DB->get_records('question_answers',
@@ -184,6 +223,7 @@ class qtype_calculatedmulti extends qtype_calculated {
         question_type::initialise_question_instance($question, $questiondata);
 
         $question->shuffleanswers = $questiondata->options->shuffleanswers;
+        $question->allowhtml = $questiondata->specific_options->allowhtml;
         $question->answernumbering = $questiondata->options->answernumbering;
         if (!empty($questiondata->options->layout)) {
             $question->layout = $questiondata->options->layout;
@@ -194,7 +234,13 @@ class qtype_calculatedmulti extends qtype_calculated {
         $question->synchronised = $questiondata->options->synchronize;
 
         $this->initialise_combined_feedback($question, $questiondata, true);
-        $this->initialise_question_answers($question, $questiondata);
+        if ($question->allowhtml) {
+          // setting 'false' as last parameter to stop forcing into plain text answer
+          $this->initialise_question_answers($question, $questiondata, false);
+        }
+        else {
+          $this->initialise_question_answers($question, $questiondata);
+        }
 
         foreach ($questiondata->options->answers as $a) {
             $question->answers[$a->id]->correctanswerlength = $a->correctanswerlength;

@@ -150,6 +150,11 @@ class qtype_calculatedmulti_edit_form extends question_edit_form {
         $mform->addHelpButton('shuffleanswers', 'shuffleanswers', 'qtype_multichoice');
         $mform->setDefault('shuffleanswers', 1);
 
+        $mform->addElement('advcheckbox', 'allowhtml',
+                get_string('allowhtml', 'qtype_calculatedmulti'), null, null, array(0, 1));
+        $mform->addHelpButton('allowhtml', 'allowhtml', 'qtype_calculatedmulti');
+        $mform->setDefault('allowhtml', 0);
+
         $numberingoptions = question_bank::get_qtype('multichoice')->get_numbering_styles();
         $mform->addElement('select', 'answernumbering',
                 get_string('answernumbering', 'qtype_multichoice'), $numberingoptions);
@@ -201,6 +206,9 @@ class qtype_calculatedmulti_edit_form extends question_edit_form {
             $question->single          = $question->options->single;
             $question->answernumbering = $question->options->answernumbering;
             $question->shuffleanswers  = $question->options->shuffleanswers;
+        }
+        if (isset($question->specific_options)) {
+            $question->allowhtml       = $question->specific_options->allowhtml;
         }
 
         return $question;

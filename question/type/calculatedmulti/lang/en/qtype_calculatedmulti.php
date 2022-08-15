@@ -31,3 +31,5 @@ $string['pluginnameadding'] = 'Adding a Calculated multichoice question';
 $string['pluginnameediting'] = 'Editing a Calculated multichoice question';
 $string['pluginnamesummary'] = 'Calculated multichoice questions are like multichoice questions which choice elements can include formula results from numeric values that are selected randomly from a set when the quiz is taken.';
 $string['privacy:metadata'] = 'The Calculated multichoice question type plugin does not store any personal data.';
+$string['allowhtml'] = 'Allow HTML in answers';
+$string['allowhtml_help'] = 'For compatibility reasons, HTML is generally disallowed in answers for a calculated multiple choice question. You need to activate this checkbox in order to use HTML in the answers.';
