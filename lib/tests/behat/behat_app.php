@@ -289,7 +289,7 @@ class behat_app extends behat_base {
                     $title = $context->getSession()->getPage()->find('xpath', '//title');
                     if ($title) {
                         $text = $title->getHtml();
-                        if ($text === 'Moodle Desktop') {
+                        if ($text === 'Moodle Desktop' || $text === 'Moodle App') {
                             return true;
                         }
                     }
