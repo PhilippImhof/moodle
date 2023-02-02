@@ -78,6 +78,30 @@ M.mod_quiz.timer = {
         require(['core_form/changechecker'], function(FormChangeChecker) {
             M.mod_quiz.timer.FormChangeChecker = FormChangeChecker;
         });
+        Y.one('#quiz-time-hide-timer').on('click', function() {
+            M.mod_quiz.timer.toggleVisibility(false);
+        });
+        Y.one('#quiz-time-show-timer').on('click', function() {
+            M.mod_quiz.timer.toggleVisibility(true);
+        });
+        Y.one('#quiz-time-show-timer').hide();
+    },
+
+    /**
+     * Hide or show the timer.
+     * @param {boolean} show whether the timer should be shown
+     */
+    toggleVisibility: function(show) {
+        var Y = M.mod_quiz.timer.Y;
+        if (show) {
+            Y.one('#quiz-time-left').show();
+            Y.one('#quiz-time-hide-timer').show();
+            Y.one('#quiz-time-show-timer').hide();
+        } else {
+            Y.one('#quiz-time-left').hide();
+            Y.one('#quiz-time-hide-timer').hide();
+            Y.one('#quiz-time-show-timer').show();
+        }
     },
 
     /**
@@ -125,6 +149,8 @@ M.mod_quiz.timer = {
             Y.one('#quiz-timer').removeClass('timeleft' + (secondsleft + 2))
                     .removeClass('timeleft' + (secondsleft + 1))
                     .addClass('timeleft' + secondsleft);
+            M.mod_quiz.timer.toggleVisibility(true);
+            Y.one('#quiz-time-hide-timer').hide();
         }
 
         // Update the time display.
