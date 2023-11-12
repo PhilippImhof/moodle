@@ -131,6 +131,7 @@ class question_attempt_step {
         } else {
             $this->userid = $userid;
         }
+        $this->user = core_user::get_user($this->userid);
 
         if (!is_null($existingstepid)) {
             $this->id = $existingstepid;
