@@ -69,6 +69,9 @@ class qtype_shortanswer extends question_type {
             if ($question->fraction[$key] > $maxfraction) {
                 $maxfraction = $question->fraction[$key];
             }
+
+            // HTML editor might have introduced a newline, probably combined with some indentation.
+            $question->answer[$key] = preg_replace('/\s+/', ' ', $answerdata);
         }
 
         if ($maxfraction != 1) {
