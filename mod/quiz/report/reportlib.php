@@ -175,19 +175,21 @@ function quiz_report_grade_method_sql($grademethod, $quizattemptsalias = 'quiza'
             return '';
 
         case QUIZ_ATTEMPTFIRST :
-            return "($quizattemptsalias.state = 'finished' AND NOT EXISTS (
+            return "(($quizattemptsalias.state = 'finished' OR $quizattemptsalias.state = 'submitted') AND NOT EXISTS (
                            SELECT 1 FROM {quiz_attempts} qa2
                             WHERE qa2.quiz = $quizattemptsalias.quiz AND
                                 qa2.userid = $quizattemptsalias.userid AND
-                                 qa2.state = 'finished' AND
+                                (qa2.state = 'finished' OR
+                                 qa2.state = 'submitted') AND
                                qa2.attempt < $quizattemptsalias.attempt))";
 
         case QUIZ_ATTEMPTLAST :
-            return "($quizattemptsalias.state = 'finished' AND NOT EXISTS (
+            return "(($quizattemptsalias.state = 'finished' OR $quizattemptsalias.state = 'submitted') AND NOT EXISTS (
                            SELECT 1 FROM {quiz_attempts} qa2
                             WHERE qa2.quiz = $quizattemptsalias.quiz AND
                                 qa2.userid = $quizattemptsalias.userid AND
-                                 qa2.state = 'finished' AND
+                                (qa2.state = 'finished' OR
+                                 qa2.state = 'submitted') AND
                                qa2.attempt > $quizattemptsalias.attempt))";
     }
 }
